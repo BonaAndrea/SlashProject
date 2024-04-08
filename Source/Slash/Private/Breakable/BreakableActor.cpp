@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "Breakable/BreakableActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Items/Treasure.h"
-#include "Breakable/BreakableActor.h"
 
 // Sets default values
 ABreakableActor::ABreakableActor()
@@ -36,7 +36,7 @@ void ABreakableActor::Tick(float DeltaTime)
 
 }
 
-void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint)
+void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
 	if (UWorld* World = GetWorld()) {
 		if (TreasureClasses.Num() > 0) {

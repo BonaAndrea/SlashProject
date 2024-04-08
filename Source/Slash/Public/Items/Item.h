@@ -15,6 +15,7 @@ enum class EItemState : uint8
 
 class UNiagaraComponent;
 class USphereComponent;
+class USoundBase;
 
 UCLASS()
 class SLASH_API AItem : public AActor
@@ -51,10 +52,14 @@ protected:
 	UFUNCTION()
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+
+	virtual void SpawnPickupSystem();
+	virtual void SpawnPickupSound();
+
 	EItemState ItemState = EItemState::EIS_Hovering;
 
 	UPROPERTY(EditAnywhere)
-	UNiagaraComponent* EmbersEffect;
+	UNiagaraComponent* ItemEffect;
 
 
 	UPROPERTY(VisibleAnywhere)
@@ -64,8 +69,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-
-
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* PickupEffect;
+	UPROPERTY(EditAnywhere)
+	USoundBase* PickupSound;
+	
 	float RunningTime = 0.f;
 };
 

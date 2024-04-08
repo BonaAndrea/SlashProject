@@ -8,6 +8,7 @@
 #include "BaseCharacter.generated.h"
 
 
+enum class EDeathPose;
 class AWeapon;
 class UAttributeComponent;
 class UAnimMontage;
@@ -20,43 +21,77 @@ class SLASH_API ABaseCharacter : public ACharacter, public IHitInterface
 public:
 	ABaseCharacter();
 	virtual void Tick(float DeltaTime) override;
+	
+protected:
+	virtual void BeginPlay() override;
+	
+	virtual void Attack();
+	virtual bool CanAttack();
+	bool IsAlive();
+	virtual void Die();
+	void DisableCapsuleCollision();
+	void DirectionalHitReact(const FVector& ImpactPoint);
+	virtual void HandleDamage(float DamageAmount);
+	void SpawnHitParticles(const FVector& ImpactPoint);
+	void PlayHitSound(const FVector& ImpactPoint);
+	void PlayHitReactMontage(const FName& SectionName);
+	virtual int32 PlayAttackMontage();
+	virtual int32 PlayDeathMontage();
+	void PlayDodgeMontage();
+	void StopAttackMontage();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetTranslationWarpTarget();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetRotationWarpTarget();
+	
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
 
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponCollision(ECollisionEnabled::Type CollisionEnabled);
-
-
-protected:
-	virtual void BeginPlay() override;
-	virtual void Attack();
-	virtual bool CanAttack();
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
-	virtual void Die();
 
-	/**
-	*  Play montage Functions
-	*/
-
-	virtual void PlayAttackMontage();
-	void PlayHitReactMontage(const FName& SectionName);
-	void DirectionalHitReact(const FVector& ImpactPoint);
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	AWeapon* EquippedWeapon;
 	UPROPERTY(VisibleAnywhere)
 	UAttributeComponent* Attributes;
 
+	UPROPERTY(BlueprintReadOnly, Category = Combat)
+	AActor* CombatTarget;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	double WarpTargetDistance = 75.f;
+
+	UPROPERTY(BlueprintReadOnly)
+	TEnumAsByte<EDeathPose> DeathPose;	
+private:
+	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
+	int32 PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames);
+	void DisableMeshCollision();
+	UPROPERTY(EditAnywhere, Category = Combat);
+	USoundBase* HitSound;
+
+	UPROPERTY(EditAnywhere, Category = Combat);
+	UParticleSystem* HitParticles;
+
 	/**
 	* Animation montages
 	*/
-	UPROPERTY(EditDefaultsOnly, Category = Montages);
+	UPROPERTY(EditDefaultsOnly, Category = Combat);
 	UAnimMontage* AttackMontage;
-	UPROPERTY(EditDefaultsOnly, Category = Montages);
+	UPROPERTY(EditDefaultsOnly, Category = Combat);
 	UAnimMontage* HitReactMontage;
-	UPROPERTY(EditDefaultsOnly, Category = Montages);
+	UPROPERTY(EditDefaultsOnly, Category = Combat);
 	UAnimMontage* DeathMontage;
-	UPROPERTY(EditAnywhere, Category = Sounds);
-	USoundBase* HitSound;
+	UPROPERTY(EditDefaultsOnly, Category = Combat);
+	UAnimMontage* DodgeMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TArray<FName> AttackMontageSections;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TArray<FName> DeathMontageSections;
+public:
+	FORCEINLINE TEnumAsByte<EDeathPose> GetDeathPose() const{ return DeathPose; }
 
-	UPROPERTY(EditAnywhere, Category = VisualEffects);
-	UParticleSystem* HitParticles;
 };

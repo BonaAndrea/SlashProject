@@ -6,6 +6,7 @@
 #include "BaseCharacter.h"
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
+#include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.Generated.h"
 
 class UInputMappingContext;
@@ -15,19 +16,27 @@ class UCameraComponent;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
+class USlashOverlay;
+class ASoul;
+class ATreasure;
 
 UCLASS()
-class SLASH_API ASlashCharacter : public ABaseCharacter
+class SLASH_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ASlashCharacter();
+	virtual void Tick(float DeltaTime) override;
 	virtual void Jump() override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
+	virtual void SetOverlappingItem(AItem* Item) override;
+	virtual void AddSouls(ASoul* Soul) override;
+	virtual void AddGold(ATreasure* Treasure) override;
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = Input);
@@ -45,50 +54,43 @@ protected:
 	UInputAction* EquipAction;
 	UPROPERTY(EditAnywhere, Category = Input);
 	UInputAction* AttackAction;
-
-	/**
-	*  Play montage Functions
-	*/
-
-	virtual void PlayAttackMontage() override;
+	UPROPERTY(EditAnywhere, Category = Input);
+	UInputAction* DodgeAction;
+	
+	void EquipWeapon(AWeapon* Weapon);
 	void PlayEquipMontage(FName SectionName);
-
-	//UFUNCTION(BlueprintCallable) -> Ë una propriet‡ che eredita dal padre
-	virtual void AttackEnd() override;
-
-
-	UFUNCTION(BlueprintCallable)
-	void Disarm();
-
-	UFUNCTION(BlueprintCallable)
-	void Arm();
-
-	UFUNCTION(BlueprintCallable)
-	void FinishEquipping();
-
-	virtual bool CanAttack() override;
-
-	/**
-	* Callback functions
-	*/
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-	void EKeyPressed();
-
 	bool CanDisarm();
 	bool CanArm();
+	virtual bool CanAttack() override;
 	virtual void Attack() override;
+	virtual void Die() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	//UFUNCTION(BlueprintCallable) -> √® una propriet√† che eredita dal padre
+	virtual void AttackEnd() override;
+	UFUNCTION(BlueprintCallable)
+	void AttachWeaponToBack();
+	UFUNCTION(BlueprintCallable)
+	void AttachWeaponToHand();
+	UFUNCTION(BlueprintCallable)
+	void FinishAction();
+	
+	/** Callback functions*/
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void Disarm();
+	bool IsOccupied();
+	bool HasEnoughStamina();
+	void Dodge();
+	void Arm();
+	void EKeyPressed();
 
 
 private:
+	void InitializeSlashOverlay(APlayerController* PlayerController);
+	void SetHUDHealth();
+	bool IsUnoccupied();
+
+	/** Character Components */
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
 
@@ -114,9 +116,11 @@ private:
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
 
+	UPROPERTY()
+	USlashOverlay* SlashOverlay;
 
 public:
-	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 	FORCEINLINE AItem* GetOverlappingItem() const { return OverlappingItem; }
 	FORCEINLINE ECharacterState GetCharacterState() const{ return CharacterState; }
+	FORCEINLINE EActionState GetActionState() const{ return ActionState; }
 };
