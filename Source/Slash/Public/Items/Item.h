@@ -59,8 +59,7 @@ protected:
 	EItemState ItemState = EItemState::EIS_Hovering;
 
 	UPROPERTY(EditAnywhere)
-	UNiagaraComponent* ItemEffect;
-
+	UNiagaraComponent* VisualEffects;
 
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* Sphere;

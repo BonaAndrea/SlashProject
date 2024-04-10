@@ -3,7 +3,6 @@
 
 #include "Items/Weapons/Weapon.h"
 #include "Kismet/GameplayStatics.h"
-#include "Characters/SlashCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Interfaces/HitInterface.h"
@@ -13,6 +12,7 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	WeaponBox->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnBoxOverlap);
+	DisableWeaponBoxCollision();
 }
 
 void AWeapon::ExecuteGetHit(FHitResult BoxHit)
@@ -80,8 +80,8 @@ void AWeapon::DisableWeaponBoxCollision()
 
 void AWeapon::DeactivateEmbers()
 {
-	if (ItemEffect) {
-		ItemEffect->Deactivate();
+	if (VisualEffects) {
+		VisualEffects->Deactivate();
 	}
 }
 
@@ -109,6 +109,7 @@ void AWeapon::BoxTrace(FHitResult& BoxHit)
 
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
+	ActorsToIgnore.Add(GetOwner());
 
 	for (AActor* Actor : IgnoreActors) {
 		ActorsToIgnore.Add(Actor);

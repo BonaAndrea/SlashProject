@@ -9,7 +9,6 @@
 #include "Items/Weapons/Weapon.h"
 #include "Perception/PawnSensingComponent.h"
 #include "Components/AttributeComponent.h"
-#include "EntitySystem/MovieSceneEntitySystemRunner.h"
 #include "Items/Soul.h"
 
 AEnemy::AEnemy()
@@ -52,6 +51,7 @@ void AEnemy::Tick(float DeltaTime)
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if(IsDead()) return DamageAmount;
 	HandleDamage(DamageAmount);
 
 	CombatTarget = EventInstigator->GetPawn();
@@ -81,6 +81,11 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 	ClearAttackTimer();
 	StopAttackMontage();
 	EquippedWeapon->DisableWeaponBoxCollision();
+	if(IsDead()) return;
+	if(IsInsideAttackRadius())
+	{
+		StartAttackTimer();
+	}
 }
 
 void AEnemy::BeginPlay()
@@ -99,19 +104,25 @@ void AEnemy::SpawnSoul()
 	UWorld* World = GetWorld();
 	if(World && SoulClass && Attributes)
 	{
-		ASoul* SpawnedSoul = World->SpawnActor<ASoul>(SoulClass, GetActorLocation(), GetActorRotation());
-		if(SpawnedSoul) SpawnedSoul->SetSouls(Attributes->GetSouls());
+		const FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, 125.f);
+		ASoul* SpawnedSoul = World->SpawnActor<ASoul>(SoulClass, SpawnLocation, GetActorRotation());
+		if(SpawnedSoul)
+		{
+			SpawnedSoul->SetOwner(this);
+			SpawnedSoul->SetSouls(Attributes->GetSouls());
+		}
 	}
 }
 
-void AEnemy::Die()
+void AEnemy::Die_Implementation()
 {
 
-	Super::Die();
+	Super::Die_Implementation();
 
 	EnemyState = EEnemyState::EES_Dead;
+	ClearAttackTimer();
+	ClearPatrolTimer();
 	DisableCapsuleCollision();
-	
 	SetHealthBarVisibility(false);
 	SetLifeSpan(DeathLifeSpan);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -195,7 +206,7 @@ void AEnemy::PatrolTimerFinished()
 void AEnemy::SetHealthBarVisibility(bool state)
 {
 	if (HealthBarWidget) {
-		HealthBarWidget->SetVisibility(false);
+		HealthBarWidget->SetVisibility(state);
 	}
 }
 
@@ -310,7 +321,7 @@ void AEnemy::SpawnDefaultWeapon()
 	if (World && WeaponClass) {
 		AWeapon* DefaultWeapon = World->SpawnActor<AWeapon>(WeaponClass);
 		if (DefaultWeapon) {
-			DefaultWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+			DefaultWeapon->Equip(GetMesh(), FName("WeaponSocket"), this, this);
 			EquippedWeapon = DefaultWeapon;
 		}
 	}

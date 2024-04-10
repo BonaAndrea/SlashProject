@@ -65,9 +65,9 @@ bool ASlashCharacter::IsUnoccupied()
 	return ActionState == EActionState::EAS_Unoccupied;
 }
 
-void ASlashCharacter::Die()
+void ASlashCharacter::Die_Implementation()
 {
-	Super::Die();
+	Super::Die_Implementation();
 	ActionState = EActionState::EAS_Dead;
 }
 
@@ -171,6 +171,43 @@ void ASlashCharacter::Dodge()
 	ActionState = EActionState::EAS_Dodge;
 }
 
+void ASlashCharacter::Pause()
+{
+	if(!PauseWidget) return;
+	if(!IsPauseOpen)
+	{
+		APlayerController* const MyPlayer = Cast<APlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+		PauseWidgetInstance = CreateWidget(
+			MyPlayer,
+			PauseWidget);
+		if(PauseWidgetInstance)
+		{
+			if (MyPlayer != NULL)
+			{
+			IsPauseOpen = !IsPauseOpen;
+				MyPlayer->SetPause(IsPauseOpen);
+			PauseWidgetInstance->AddToViewport();
+				MyPlayer->SetInputMode(FInputModeUIOnly());
+				MyPlayer->SetShowMouseCursor(true);
+			}
+		}
+	}
+	else if(IsPauseOpen)
+	{
+		if(PauseWidgetInstance){
+			APlayerController* const MyPlayer = Cast<APlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+			if (MyPlayer != NULL)
+			{
+			PauseWidgetInstance->RemoveFromParent();
+			IsPauseOpen = !IsPauseOpen;
+				MyPlayer->SetPause(IsPauseOpen);
+				MyPlayer->SetInputMode(FInputModeGameOnly());
+				MyPlayer->SetShowMouseCursor(false);
+			}
+		}
+	}
+}
+
 void ASlashCharacter::Arm()
 {
 	PlayEquipMontage("Equip");
@@ -182,6 +219,10 @@ void ASlashCharacter::EKeyPressed()
 {
 	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
 	{
+		if(EquippedWeapon)
+		{
+			EquippedWeapon->Destroy();
+		}
 		EquipWeapon(OverlappingWeapon);
 	}
 	else 
@@ -259,6 +300,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EKeyPressed);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Dodge);
+		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started, this, &ASlashCharacter::Pause);
 	}
 }
 

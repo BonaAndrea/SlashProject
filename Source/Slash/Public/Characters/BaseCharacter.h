@@ -28,7 +28,8 @@ protected:
 	virtual void Attack();
 	virtual bool CanAttack();
 	bool IsAlive();
-	virtual void Die();
+	UFUNCTION(BlueprintNativeEvent)
+	void Die();
 	void DisableCapsuleCollision();
 	void DirectionalHitReact(const FVector& ImpactPoint);
 	virtual void HandleDamage(float DamageAmount);

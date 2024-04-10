@@ -56,6 +56,15 @@ protected:
 	UInputAction* AttackAction;
 	UPROPERTY(EditAnywhere, Category = Input);
 	UInputAction* DodgeAction;
+	UPROPERTY(EditAnywhere, Category = Input);
+	UInputAction* PauseAction;
+	UPROPERTY(EditAnywhere, Category = Input);
+	TSubclassOf<UUserWidget> PauseWidget;
+
+	UUserWidget* PauseWidgetInstance;
+	
+	bool IsPauseOpen = false;
+
 	
 	void EquipWeapon(AWeapon* Weapon);
 	void PlayEquipMontage(FName SectionName);
@@ -63,7 +72,7 @@ protected:
 	bool CanArm();
 	virtual bool CanAttack() override;
 	virtual void Attack() override;
-	virtual void Die() override;
+	void Die_Implementation() override;
 
 	//UFUNCTION(BlueprintCallable) -> è una proprietà che eredita dal padre
 	virtual void AttackEnd() override;
@@ -81,6 +90,7 @@ protected:
 	bool IsOccupied();
 	bool HasEnoughStamina();
 	void Dodge();
+	void Pause();
 	void Arm();
 	void EKeyPressed();
 
