@@ -129,6 +129,10 @@ private:
 	UPROPERTY()
 	USlashOverlay* SlashOverlay;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> GameOverWidget;
+	UUserWidget* GameOverWidgetInstance;
+
 public:
 	FORCEINLINE AItem* GetOverlappingItem() const { return OverlappingItem; }
 	FORCEINLINE ECharacterState GetCharacterState() const{ return CharacterState; }

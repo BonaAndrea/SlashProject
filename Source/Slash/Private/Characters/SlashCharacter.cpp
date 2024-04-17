@@ -69,6 +69,15 @@ void ASlashCharacter::Die_Implementation()
 {
 	Super::Die_Implementation();
 	ActionState = EActionState::EAS_Dead;
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if(PC&&GameOverWidget)
+	{
+		GameOverWidgetInstance = CreateWidget(PC,
+			GameOverWidget);
+		GameOverWidgetInstance->AddToViewport();
+		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeUIOnly());
+	}
 }
 
 void ASlashCharacter::Jump()
