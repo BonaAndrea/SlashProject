@@ -349,6 +349,7 @@ void ASlashCharacter::AddSouls(ASoul* Soul)
 	{
 		Attributes->AddSouls(Soul->GetSouls());
 		SlashOverlay->SetSouls(Attributes->GetSouls());
+		CheckGameWon();
 	}
 }
 
@@ -358,5 +359,26 @@ void ASlashCharacter::AddGold(ATreasure* Treasure)
 	{
 		Attributes->AddGold(Treasure->GetGold());
 		SlashOverlay->SetGold(Attributes->GetGold());
+		CheckGameWon();
 	}
+}
+
+void ASlashCharacter::CheckGameWon()
+{
+		if(Attributes && SlashOverlay)
+		{
+			if(Attributes->GetGold()>=GoldGoal || Attributes->GetSouls() >= SoulGoal)
+			{
+				APlayerController* PC = Cast<APlayerController>(GetController());
+				if(PC&&GameWinWidget)
+				{
+					GameWinWidgetInstance = CreateWidget(PC,
+						GameWinWidget);
+					GameWinWidgetInstance->AddToViewport();
+					PC->SetShowMouseCursor(true);
+					PC->SetInputMode(FInputModeUIOnly());
+					ActionState = EActionState::EAS_Dead;
+				}
+			}
+		}
 }

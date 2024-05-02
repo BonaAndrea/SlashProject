@@ -35,6 +35,7 @@ public:
 	virtual void SetOverlappingItem(AItem* Item) override;
 	virtual void AddSouls(ASoul* Soul) override;
 	virtual void AddGold(ATreasure* Treasure) override;
+	void CheckGameWon();
 
 protected:
 	virtual void BeginPlay() override;
@@ -94,6 +95,11 @@ protected:
 	void Arm();
 	void EKeyPressed();
 
+	UPROPERTY(EditDefaultsOnly)
+	float GoldGoal = 100.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float SoulGoal = 100.f;
 
 private:
 	void InitializeSlashOverlay(APlayerController* PlayerController);
@@ -132,6 +138,10 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> GameOverWidget;
 	UUserWidget* GameOverWidgetInstance;
+	
+	UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<UUserWidget> GameWinWidget;
+    UUserWidget* GameWinWidgetInstance;
 
 public:
 	FORCEINLINE AItem* GetOverlappingItem() const { return OverlappingItem; }
