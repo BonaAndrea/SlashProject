@@ -26,6 +26,10 @@ protected:
 	void CreateFields(const FVector& FieldLocation);
 	UFUNCTION()
 	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 public: 
 	AWeapon();
 	void PlayEquipSound();
@@ -51,7 +55,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	UBoxComponent* WeaponBox;
-
+	
+	UPROPERTY(EditAnywhere, Category = "UI")
+	class UWidgetComponent* InteractionWidgetComponent;
 
 	/*
 	* EditAnywhere is more for individual variables

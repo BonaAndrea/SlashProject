@@ -12,11 +12,15 @@
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
 #include "Components/AttributeComponent.h"
+#include "Components/TextBlock.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/SlashHUD.h"
 #include "HUD/SlashOverlay.h"
 #include "Items/Item.h"
 #include "Items/Soul.h"
 #include "Items/Treasure.h"
+#include "Kismet/GameplayStatics.h"
+#include "Slash/SlashGameModeBase.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -46,7 +50,8 @@ ASlashCharacter::ASlashCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	GetMesh()->SetGenerateOverlapEvents(true);
-	
+	KeyboardInteractionText = FText::FromString("Press E to Interact");
+	ControllerInteractionText = FText::FromString("Press X to Interact");
 }
 
 void ASlashCharacter::Tick(float DeltaTime)
@@ -69,15 +74,9 @@ void ASlashCharacter::Die_Implementation()
 {
 	Super::Die_Implementation();
 	ActionState = EActionState::EAS_Dead;
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if(PC&&GameOverWidget)
-	{
-		GameOverWidgetInstance = CreateWidget(PC,
-			GameOverWidget);
-		GameOverWidgetInstance->AddToViewport();
-		PC->SetShowMouseCursor(true);
-		PC->SetInputMode(FInputModeUIOnly());
-	}
+	ASlashGameModeBase* GMB = Cast<ASlashGameModeBase>(UGameplayStatics::GetGameMode(this));
+	check(GMB);
+	GMB->GameOver(false);
 }
 
 void ASlashCharacter::Jump()
@@ -182,39 +181,11 @@ void ASlashCharacter::Dodge()
 
 void ASlashCharacter::Pause()
 {
-	if(!PauseWidget) return;
-	if(!IsPauseOpen)
-	{
-		APlayerController* const MyPlayer = Cast<APlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-		PauseWidgetInstance = CreateWidget(
-			MyPlayer,
-			PauseWidget);
-		if(PauseWidgetInstance)
+		ASlashGameModeBase* GameMode = Cast<ASlashGameModeBase>(UGameplayStatics::GetGameMode(this));
+		if (GameMode)
 		{
-			if (MyPlayer != NULL)
-			{
-			IsPauseOpen = !IsPauseOpen;
-				MyPlayer->SetPause(IsPauseOpen);
-			PauseWidgetInstance->AddToViewport();
-				MyPlayer->SetInputMode(FInputModeUIOnly());
-				MyPlayer->SetShowMouseCursor(true);
-			}
+			GameMode->TogglePause();
 		}
-	}
-	else if(IsPauseOpen)
-	{
-		if(PauseWidgetInstance){
-			APlayerController* const MyPlayer = Cast<APlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-			if (MyPlayer != NULL)
-			{
-			PauseWidgetInstance->RemoveFromParent();
-			IsPauseOpen = !IsPauseOpen;
-				MyPlayer->SetPause(IsPauseOpen);
-				MyPlayer->SetInputMode(FInputModeGameOnly());
-				MyPlayer->SetShowMouseCursor(false);
-			}
-		}
-	}
 }
 
 void ASlashCharacter::Arm()
@@ -365,20 +336,48 @@ void ASlashCharacter::AddGold(ATreasure* Treasure)
 
 void ASlashCharacter::CheckGameWon()
 {
-		if(Attributes && SlashOverlay)
+	if(Attributes && SlashOverlay)
+	{
+		if(Attributes->GetGold()>=GoldGoal || Attributes->GetSouls() >= SoulGoal)
 		{
-			if(Attributes->GetGold()>=GoldGoal || Attributes->GetSouls() >= SoulGoal)
+			ASlashGameModeBase* GMB = Cast<ASlashGameModeBase>(UGameplayStatics::GetGameMode(this));
+			check(GMB);
+			GMB->GameOver(true);
+			GetCharacterMovement()->DisableMovement();
+		}
+	}
+}
+
+void ASlashCharacter::ShowInteractionPopup()
+{
+	if (!InteractionPopup && InteractionPopupClass)
+	{
+		InteractionPopup = CreateWidget<UUserWidget>(GetWorld(), InteractionPopupClass);
+		if (InteractionPopup)
+		{
+			// Determina il tipo di input in uso
+			APlayerController* PC = Cast<APlayerController>(GetController());
+			if (PC)
 			{
-				APlayerController* PC = Cast<APlayerController>(GetController());
-				if(PC&&GameWinWidget)
+				bool bIsUsingGamepad = PC->IsInputKeyDown(EKeys::Gamepad_FaceButton_Bottom);
+				FText InteractionText = bIsUsingGamepad ? ControllerInteractionText : KeyboardInteractionText;
+
+				UTextBlock* TextBlock = Cast<UTextBlock>(InteractionPopup->GetWidgetFromName(TEXT("InteractionTextBlock")));
+				if (TextBlock)
 				{
-					GameWinWidgetInstance = CreateWidget(PC,
-						GameWinWidget);
-					GameWinWidgetInstance->AddToViewport();
-					PC->SetShowMouseCursor(true);
-					PC->SetInputMode(FInputModeUIOnly());
-					ActionState = EActionState::EAS_Dead;
+					TextBlock->SetText(InteractionText);
 				}
 			}
+			InteractionPopup->AddToViewport();
 		}
+	}
+}
+
+void ASlashCharacter::HideInteractionPopup()
+{
+	if (InteractionPopup)
+	{
+		InteractionPopup->RemoveFromParent();
+		InteractionPopup = nullptr;
+	}
 }

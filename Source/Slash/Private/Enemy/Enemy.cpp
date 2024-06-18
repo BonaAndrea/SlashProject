@@ -9,6 +9,7 @@
 #include "Items/Weapons/Weapon.h"
 #include "Perception/PawnSensingComponent.h"
 #include "Components/AttributeComponent.h"
+#include "Engine/TargetPoint.h"
 #include "Items/Soul.h"
 
 AEnemy::AEnemy()
@@ -96,8 +97,53 @@ void AEnemy::BeginPlay()
 
 	InitializeEnemy();
 	Tags.Add(FName("Enemy"));
-
+	// Spawn patrol points around the enemy
+	SpawnPatrolPointsAroundEnemy();
 }
+
+void AEnemy::SpawnPatrolPointsAroundEnemy()
+{
+	const int32 NumPoints = 4; // Number of patrol points to spawn
+	const float CircleRadius = 500.0f; // Radius of the circle around enemy
+
+	for (int32 i = 0; i < NumPoints; ++i)
+	{
+		float Angle = 2.0f * PI * i / NumPoints; // Calculate angle for each point
+		FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0f) * CircleRadius;
+		FVector SpawnLocation = GetActorLocation() + Offset;
+
+		// Perform a line trace to find the floor's Z position
+		FHitResult HitResult;
+		FVector StartLocation = SpawnLocation + FVector(0.0f, 0.0f, 500.0f); // Start trace above the desired position
+		FVector EndLocation = SpawnLocation + FVector(0.0f, 0.0f, -500.0f); // End trace below the desired position
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams);
+
+		if (bHit)
+		{
+			// Adjust the Z position to the floor's Z position
+			SpawnLocation.Z = HitResult.Location.Z;
+
+			// Spawn ATargetPoint at calculated location
+			ATargetPoint* PatrolPoint = GetWorld()->SpawnActor<ATargetPoint>(SpawnLocation, FRotator::ZeroRotator);
+			if (PatrolPoint)
+			{
+				PatrolTargets.Add(PatrolPoint);
+			}
+		}
+	}
+
+	// Choose a random patrol target from the generated points
+	if (PatrolTargets.Num() > 0)
+	{
+		int32 RandomIndex = FMath::RandRange(0, PatrolTargets.Num() - 1);
+		PatrolTarget = PatrolTargets[RandomIndex];
+	}
+}
+
 
 void AEnemy::SpawnSoul()
 {

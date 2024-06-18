@@ -32,6 +32,7 @@ public:
 protected:
 	/** <AActor> */
 	virtual void BeginPlay() override;
+	void SpawnPatrolPointsAroundEnemy();
 	void SpawnSoul();
 	/** </AActor> */
 
@@ -103,7 +104,7 @@ private:
 	double AcceptanceRadius = 50.f;
 	UPROPERTY()
 	class AAIController* EnemyController;
-
+	
 	// Current Patrol Target
 	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
 	AActor* PatrolTarget;
@@ -132,4 +133,5 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TSubclassOf<class ASoul> SoulClass;
+
 };

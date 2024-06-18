@@ -2,17 +2,28 @@
 
 
 #include "Items/Weapons/Weapon.h"
+
+#include "InteractionPopupWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Interfaces/HitInterface.h"
 #include "NiagaraComponent.h"
+#include "Characters/SlashCharacter.h"
+#include "Components/WidgetComponent.h"
+#include "Interfaces/InteractableInterface.h"
 
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
+	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
+	Sphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
 	WeaponBox->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnBoxOverlap);
 	DisableWeaponBoxCollision();
+	if (InteractionWidgetComponent)
+	{
+		InteractionWidgetComponent->SetVisibility(false);
+	}
 }
 
 void AWeapon::ExecuteGetHit(FHitResult BoxHit)
@@ -55,6 +66,11 @@ AWeapon::AWeapon()
 	BoxTraceEnd = CreateDefaultSubobject<USceneComponent>(TEXT("Box Trace End"));
 	BoxTraceEnd->SetupAttachment(GetRootComponent());
 
+	InteractionWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionWidgetComponent"));
+	InteractionWidgetComponent->SetupAttachment(RootComponent); // Assicurati che sia attaccato alla radice dell'arma
+	InteractionWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen); // Può anche essere EWidgetSpace::World per posizionamento 3D
+	InteractionWidgetComponent->SetDrawSize(FVector2D(200.f, 50.f)); // Dimensioni del widget
+	
 }
 
 void AWeapon::PlayEquipSound()
@@ -119,4 +135,53 @@ void AWeapon::BoxTrace(FHitResult& BoxHit)
 	IgnoreActors.AddUnique(BoxHit.GetActor());
 
 }
+
+void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+
+    if (OtherActor && OtherActor != this)
+    {
+        IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(OtherActor);
+        if (InteractableActor && InteractionWidgetComponent)
+        {
+            // Mostra il widget di interazione
+            InteractionWidgetComponent->SetVisibility(true);
+
+            // Imposta il testo dell'interazione
+            ASlashCharacter* Character = Cast<ASlashCharacter>(OtherActor);
+            if (Character)
+            {
+                APlayerController* PC = Cast<APlayerController>(Character->GetController());
+                if (PC)
+                {
+                    bool bIsUsingGamepad = PC->IsInputKeyDown(EKeys::Gamepad_FaceButton_Bottom);
+                    FText InteractionText = bIsUsingGamepad ? FText::FromString("Press X to Interact") : FText::FromString("Press E to Interact");
+
+                    UInteractionPopupWidget* InteractionWidget = Cast<UInteractionPopupWidget>(InteractionWidgetComponent->GetUserWidgetObject());
+                    if (InteractionWidget)
+                    {
+                        InteractionWidget->SetInteractionText(InteractionText);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    Super::OnSphereEndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
+
+    if (OtherActor && OtherActor != this)
+    {
+        IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(OtherActor);
+        if (InteractableActor && InteractionWidgetComponent)
+        {
+            // Nascondi il widget di interazione
+            InteractionWidgetComponent->SetVisibility(false);
+        }
+    }
+}
+	
 

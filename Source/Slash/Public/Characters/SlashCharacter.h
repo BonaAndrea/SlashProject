@@ -6,6 +6,7 @@
 #include "BaseCharacter.h"
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
+#include "Interfaces/InteractableInterface.h"
 #include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.Generated.h"
 
@@ -21,7 +22,7 @@ class ASoul;
 class ATreasure;
 
 UCLASS()
-class SLASH_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
+class SLASH_API ASlashCharacter : public ABaseCharacter, public IPickupInterface, public IInteractableInterface
 {
 	GENERATED_BODY()
 
@@ -36,6 +37,8 @@ public:
 	virtual void AddSouls(ASoul* Soul) override;
 	virtual void AddGold(ATreasure* Treasure) override;
 	void CheckGameWon();
+	virtual void ShowInteractionPopup();
+	virtual void HideInteractionPopup();
 
 protected:
 	virtual void BeginPlay() override;
@@ -59,13 +62,17 @@ protected:
 	UInputAction* DodgeAction;
 	UPROPERTY(EditAnywhere, Category = Input);
 	UInputAction* PauseAction;
-	UPROPERTY(EditAnywhere, Category = Input);
-	TSubclassOf<UUserWidget> PauseWidget;
-
-	UUserWidget* PauseWidgetInstance;
 	
-	bool IsPauseOpen = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	FText KeyboardInteractionText;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	FText ControllerInteractionText;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> InteractionPopupClass;
+
+	UUserWidget* InteractionPopup;
 	
 	void EquipWeapon(AWeapon* Weapon);
 	void PlayEquipMontage(FName SectionName);
@@ -134,14 +141,6 @@ private:
 
 	UPROPERTY()
 	USlashOverlay* SlashOverlay;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> GameOverWidget;
-	UUserWidget* GameOverWidgetInstance;
-	
-	UPROPERTY(EditDefaultsOnly)
-    TSubclassOf<UUserWidget> GameWinWidget;
-    UUserWidget* GameWinWidgetInstance;
 
 public:
 	FORCEINLINE AItem* GetOverlappingItem() const { return OverlappingItem; }
