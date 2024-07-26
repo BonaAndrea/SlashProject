@@ -127,7 +127,7 @@ void ASlashCharacter::AttackEnd()
 
 bool ASlashCharacter::CanAttack()
 {
-	return ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped;
+	return ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped && HasEnoughStamina();
 }
 
 void ASlashCharacter::Move(const FInputActionValue& Value)
@@ -247,6 +247,11 @@ void ASlashCharacter::Attack()
 	if (CanAttack()) {
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
+		if(Attributes && SlashOverlay)
+		{
+			Attributes->UseStamina(Attributes->GetAttackCost());
+			SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+		}
 	}
 }
 

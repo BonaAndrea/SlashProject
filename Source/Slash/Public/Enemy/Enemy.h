@@ -43,6 +43,7 @@ protected:
 	virtual bool CanAttack() override;
 	virtual void HandleDamage(float DamageAmount) override;
 	virtual void AttackEnd() override;
+	void StartPatrolTimer();
 	/** <ABaseCharacter> */
 
 	
