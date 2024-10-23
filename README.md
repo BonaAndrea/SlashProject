@@ -15,7 +15,7 @@
 
 ## Previews
   <img src="https://github.com/BonaAndrea/BonaAndrea.github.io/blob/master/images/sands-of-dawn/2.jpg" alt="Image1" width="400"/>
-    <img src="https://github.com/BonaAndrea/BonaAndrea.github.io/blob/master/images/sands-of-dawn/2.jpg" alt="Image2" width="400"/>
+    <img src="https://github.com/BonaAndrea/BonaAndrea.github.io/blob/master/images/sands-of-dawn/7.png" alt="Image2" width="400"/>
 
 ## Contributing
 1. Fork the repository.
