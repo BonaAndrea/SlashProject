@@ -13,6 +13,9 @@
 - **Challenging Enemies**: Encounter formidable foes and epic boss battles that test player skills.
 - **Story-Driven**: Discover a rich lore behind the world of *Sands of Dawn*.
 
+## Previews
+  <img src="https://github.com/BonaAndrea/BonaAndrea.github.io/blob/master/images/sands-of-dawn/2.jpg" alt="Image1" width="400"/>
+
 ## Contributing
 1. Fork the repository.
 2. Create a new branch:
