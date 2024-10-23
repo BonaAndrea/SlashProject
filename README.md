@@ -1,5 +1,7 @@
 # Sands of Dawn
 
+![logo](Assets/Textures/GameLogo.png)
+
 ## Description
 "Sands of Dawn" is a challenging soulslike game developed in Unreal Engine, written primarily in C++. The game is set in a mysterious desert environment where players must master combat mechanics, solve puzzles, and face powerful enemies to unravel the story.
 
